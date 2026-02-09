@@ -8,19 +8,15 @@
 </head>
 <body>
   <main class="container">
-    <header class="hero card">
-      <p class="eyebrow">Loan planning</p>
+    <header>
       <h1>Mortgage Comparison Calculator</h1>
-      <p class="lead">Compare two mortgage options side-by-side, apply prepayment strategies, and inspect payoff impact in charts and amortization schedules.</p>
+      <p>Compare two loan options with amortization schedules and prepayment scenarios.</p>
     </header>
 
-    <section class="grid two-columns loans">
-      <article class="card loan-panel" id="loan-1">
-        <div class="panel-head">
-          <p class="pill pill-a">Mortgage A</p>
-          <p class="muted">Baseline scenario</p>
-        </div>
-        <label>Loan Amount
+    <section class="grid two-columns">
+      <article class="card" id="loan-1">
+        <h2>Mortgage A</h2>
+        <label>Loan Amount ($)
           <input type="number" id="loanAmount1" value="290000" min="0" step="1000" />
         </label>
         <label>Interest Rate (%)
@@ -31,12 +27,9 @@
         </label>
       </article>
 
-      <article class="card loan-panel" id="loan-2">
-        <div class="panel-head">
-          <p class="pill pill-b">Mortgage B</p>
-          <p class="muted">Alternative scenario</p>
-        </div>
-        <label>Loan Amount
+      <article class="card" id="loan-2">
+        <h2>Mortgage B</h2>
+        <label>Loan Amount ($)
           <input type="number" id="loanAmount2" value="290000" min="0" step="1000" />
         </label>
         <label>Interest Rate (%)
@@ -48,29 +41,23 @@
       </article>
     </section>
 
-    <section class="card scenario">
-      <div class="scenario-header">
-        <div>
-          <h2>Prepayment Scenario</h2>
-          <p class="muted">These extra payments are applied to both mortgages for apples-to-apples comparison.</p>
-        </div>
-        <button id="calculateBtn">Recalculate</button>
-      </div>
-
+    <section class="card">
+      <h2>Prepayment Scenario (applies to both mortgages)</h2>
       <div class="grid three-columns">
-        <label>Extra Monthly Payment
+        <label>Extra Monthly Payment ($)
           <input type="number" id="extraMonthly" value="0" min="0" step="10" />
         </label>
-        <label>Annual Lump-Sum
+        <label>Annual Lump-Sum ($)
           <input type="number" id="extraAnnual" value="0" min="0" step="100" />
         </label>
-        <label>One-Time Payment
+        <label>One-Time Payment ($)
           <input type="number" id="extraOneTime" value="0" min="0" step="100" />
         </label>
       </div>
-      <label class="one-time-month">One-Time Payment Month
+      <label>One-Time Payment Month
         <input type="number" id="oneTimeMonth" value="12" min="1" step="1" />
       </label>
+      <button id="calculateBtn">Calculate Comparison</button>
     </section>
 
     <section class="grid two-columns">
@@ -84,12 +71,10 @@
       </article>
     </section>
 
-    <section class="card chart-card">
-      <div class="chart-head">
-        <h2>Balance Trajectory</h2>
-        <p class="legend"><span class="dot blue"></span> Mortgage A <span class="dot green"></span> Mortgage B</p>
-      </div>
+    <section class="card">
+      <h2>Visual Comparison: Remaining Balance Over Time</h2>
       <canvas id="balanceChart" width="1000" height="380" aria-label="Balance comparison chart"></canvas>
+      <p class="legend"><span class="dot blue"></span> Mortgage A &nbsp; <span class="dot green"></span> Mortgage B</p>
       <p id="comparisonBlurb"></p>
     </section>
 

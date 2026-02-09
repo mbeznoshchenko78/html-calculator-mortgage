@@ -129,6 +129,96 @@ function getInputs() {
       extraOneTime: validateNumber(inputs.extraOneTime.value, "Invalid one-time prepayment"),
       oneTimeMonth
     }
+
+document.querySelector("#calculateBtn").addEventListener("click", runComparison);
+
+function monthlyPayment(principal, annualRatePct, years) {
+  const monthlyRate = annualRatePct / 100 / 12;
+  const months = years * 12;
+
+  if (monthlyRate === 0) {
+    return principal / months;
+  }
+
+  return principal * (monthlyRate / (1 - (1 + monthlyRate) ** -months));
+}
+
+function buildSchedule(loanAmount, annualRatePct, years, scenario) {
+  const monthlyRate = annualRatePct / 100 / 12;
+  const payment = monthlyPayment(loanAmount, annualRatePct, years);
+  const maxMonths = years * 12;
+
+  let balance = loanAmount;
+  let totalInterest = 0;
+  let totalPaid = 0;
+  const rows = [];
+
+  for (let month = 1; month <= maxMonths && balance > 0; month += 1) {
+    const interest = balance * monthlyRate;
+    const scheduledPrincipal = Math.min(payment - interest, balance);
+
+    let extra = scenario.extraMonthly;
+    if (scenario.extraAnnual > 0 && month % 12 === 0) {
+      extra += scenario.extraAnnual;
+    }
+    if (scenario.extraOneTime > 0 && month === scenario.oneTimeMonth) {
+      extra += scenario.extraOneTime;
+    }
+
+    const appliedExtra = Math.min(extra, balance - scheduledPrincipal);
+    const principal = scheduledPrincipal + appliedExtra;
+    const actualPayment = principal + interest;
+
+    balance = Math.max(0, balance - principal);
+    totalInterest += interest;
+    totalPaid += actualPayment;
+
+    rows.push({
+      month,
+      payment: actualPayment,
+      principal,
+      interest,
+      extra: appliedExtra,
+      balance
+    });
+  }
+
+  return {
+    payment,
+    rows,
+    totalInterest,
+    totalPaid,
+    payoffMonths: rows.length
+  };
+}
+
+function validateNumber(value, message) {
+  const num = Number(value);
+  if (!Number.isFinite(num) || num < 0) {
+    throw new Error(message);
+  }
+  return num;
+}
+
+function getInputs() {
+  const oneTimeMonth = Math.max(1, Math.floor(validateNumber(inputs.oneTimeMonth.value, "Invalid one-time payment month")));
+  return {
+    loan1: {
+      loanAmount: validateNumber(inputs.loanAmount1.value, "Invalid loan amount for Mortgage A"),
+      rate: validateNumber(inputs.rate1.value, "Invalid interest rate for Mortgage A"),
+      years: Math.max(1, Math.floor(validateNumber(inputs.years1.value, "Invalid years for Mortgage A")))
+    },
+    loan2: {
+      loanAmount: validateNumber(inputs.loanAmount2.value, "Invalid loan amount for Mortgage B"),
+      rate: validateNumber(inputs.rate2.value, "Invalid interest rate for Mortgage B"),
+      years: Math.max(1, Math.floor(validateNumber(inputs.years2.value, "Invalid years for Mortgage B")))
+    },
+    scenario: {
+      extraMonthly: validateNumber(inputs.extraMonthly.value, "Invalid monthly prepayment"),
+      extraAnnual: validateNumber(inputs.extraAnnual.value, "Invalid annual prepayment"),
+      extraOneTime: validateNumber(inputs.extraOneTime.value, "Invalid one-time prepayment"),
+      oneTimeMonth
+    }
   };
 }
 
@@ -172,6 +262,42 @@ function renderTable(body, rows) {
     `;
     body.append(tr);
   });
+function renderSummary(el, schedule, title) {
+  el.innerHTML = "";
+  const entries = [
+    [`Base Monthly Payment`, fmtCurrency.format(schedule.payment)],
+    [`Total Interest`, fmtCurrency.format(schedule.totalInterest)],
+    [`Total Paid`, fmtCurrency.format(schedule.totalPaid)],
+    [`Time to Payoff`, monthsToYearsMonths(schedule.payoffMonths)]
+  ];
+
+  entries.forEach(([label, value]) => {
+    const li = document.createElement("li");
+    li.innerHTML = `<strong>${label}</strong>: ${value}`;
+    el.append(li);
+  });
+
+  if (!schedule.rows.length) {
+    const li = document.createElement("li");
+    li.textContent = `${title}: no amortization rows generated.`;
+    el.append(li);
+  }
+}
+
+function renderTable(body, rows) {
+  body.innerHTML = "";
+  rows.forEach((row) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${row.month}</td>
+      <td>${fmtCurrency.format(row.payment)}</td>
+      <td>${fmtCurrency.format(row.principal)}</td>
+      <td>${fmtCurrency.format(row.interest)}</td>
+      <td>${fmtCurrency.format(row.extra)}</td>
+      <td>${fmtCurrency.format(row.balance)}</td>
+    `;
+    body.append(tr);
+  });
 }
 
 function drawChart(rowsA, rowsB) {
@@ -179,6 +305,7 @@ function drawChart(rowsA, rowsB) {
   const width = chart.width;
   const height = chart.height;
   const pad = { left: 64, right: 18, top: 18, bottom: 44 };
+  const pad = { left: 60, right: 20, top: 20, bottom: 40 };
 
   ctx.clearRect(0, 0, width, height);
   ctx.fillStyle = "#fff";
@@ -191,6 +318,7 @@ function drawChart(rowsA, rowsB) {
   const mapY = (bal) => pad.top + (1 - bal / Math.max(1, maxBalance)) * (height - pad.top - pad.bottom);
 
   ctx.strokeStyle = "#cad6e4";
+  ctx.strokeStyle = "#c8d4e5";
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(pad.left, pad.top);
@@ -202,9 +330,9 @@ function drawChart(rowsA, rowsB) {
     const value = maxBalance * (1 - tick);
     const y = pad.top + tick * (height - pad.top - pad.bottom);
     ctx.fillStyle = "#5f6b7a";
-    ctx.font = "12px Inter, sans-serif";
-    ctx.fillText(fmtCurrency.format(value), 5, y + 4);
-    ctx.strokeStyle = "#eef3f9";
+    ctx.font = "12px sans-serif";
+    ctx.fillText(fmtCurrency.format(value), 4, y + 4);
+    ctx.strokeStyle = "#edf2f7";
     ctx.beginPath();
     ctx.moveTo(pad.left, y);
     ctx.lineTo(width - pad.right, y);
@@ -214,7 +342,7 @@ function drawChart(rowsA, rowsB) {
   function plot(rows, color) {
     if (!rows.length) return;
     ctx.strokeStyle = color;
-    ctx.lineWidth = 2.5;
+    ctx.lineWidth = 2;
     ctx.beginPath();
 
     rows.forEach((row, i) => {
@@ -227,11 +355,11 @@ function drawChart(rowsA, rowsB) {
     ctx.stroke();
   }
 
-  plot(rowsA, "#1f65d6");
-  plot(rowsB, "#129364");
+  plot(rowsA, "#2f6fed");
+  plot(rowsB, "#20a16b");
 
   ctx.fillStyle = "#5f6b7a";
-  ctx.fillText("Months", width / 2 - 22, height - 12);
+  ctx.fillText("Months", width / 2 - 20, height - 10);
 }
 
 function runComparison() {
@@ -249,19 +377,12 @@ function runComparison() {
     const interestDiff = schedule1.totalInterest - schedule2.totalInterest;
     const payoffDiff = schedule1.payoffMonths - schedule2.payoffMonths;
 
-    const interestText =
-      interestDiff === 0
-        ? "Both mortgages have the same total interest"
-        : `${interestDiff > 0 ? "Mortgage B" : "Mortgage A"} saves about ${fmtCurrency.format(Math.abs(interestDiff))} in total interest`;
+    const cheaperInterest = interestDiff > 0 ? "Mortgage B" : "Mortgage A";
+    const absInterest = fmtCurrency.format(Math.abs(interestDiff));
+    const faster = payoffDiff > 0 ? "Mortgage B" : "Mortgage A";
 
-    const payoffText =
-      payoffDiff === 0
-        ? "both finish in the same number of months."
-        : `${payoffDiff > 0 ? "Mortgage B" : "Mortgage A"} pays off faster by ${Math.abs(payoffDiff)} months.`;
-
-    comparisonBlurb.textContent = `${interestText}; ${payoffText}`;
+    comparisonBlurb.textContent = `${cheaperInterest} saves about ${absInterest} in total interest. ${faster} pays off faster by ${Math.abs(payoffDiff)} months.`;
   } catch (err) {
-    clearOutputs();
     comparisonBlurb.textContent = err.message;
   }
 }
