@@ -7,17 +7,18 @@ A static HTML/CSS/JavaScript mortgage calculator that compares two loans side-by
 - Preloaded defaults:
   - Mortgage A: $290,000 @ 6.88% for 30 years
   - Mortgage B: $290,000 @ 5.88% for 20 years
-- Apply prepayment scenarios to both mortgages:
+- Independent prepayment settings for each mortgage:
   - Extra monthly prepayment
   - Annual lump-sum prepayment
   - One-time prepayment at a selected month
-- View side-by-side summary metrics:
+- Side-by-side summary metrics:
   - Monthly payment
   - Total interest
   - Total paid
   - Payoff time
-- Visual comparison of remaining balances over time.
-- Full amortization schedule tables for each mortgage.
+- Visual comparison of remaining balances over time with chart hover hints.
+- Full amortization schedules for each mortgage with CSV export.
+- Inline form validation and a reset-to-defaults action.
 
 ## Run locally
 Open `index.html` directly, or start a local server:
