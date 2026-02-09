@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Calculator</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="card">
+    <h1>Calculator</h1>
+
+    <input id="a" type="number" step="any" placeholder="A" />
+    <input id="b" type="number" step="any" placeholder="B" />
+
+    <div class="row">
+      <button data-op="add">+</button>
+      <button data-op="sub">−</button>
+      <button data-op="mul">×</button>
+      <button data-op="div">÷</button>
+    </div>
+
+    <p>Result: <strong id="result">—</strong></p>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
