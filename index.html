@@ -10,7 +10,7 @@
   <main class="container">
     <header>
       <h1>Mortgage Comparison Calculator</h1>
-      <p>Compare two loan options with amortization schedules and prepayment scenarios.</p>
+      <p>Compare two loan options with amortization schedules and custom prepayment scenarios.</p>
     </header>
 
     <section class="grid two-columns">
@@ -25,6 +25,22 @@
         <label>Term (Years)
           <input type="number" id="years1" value="30" min="1" step="1" />
         </label>
+
+        <h3>Prepayment for Mortgage A</h3>
+        <div class="grid three-columns">
+          <label>Extra Monthly ($)
+            <input type="number" id="extraMonthly1" value="0" min="0" step="10" />
+          </label>
+          <label>Annual Lump-Sum ($)
+            <input type="number" id="extraAnnual1" value="0" min="0" step="100" />
+          </label>
+          <label>One-Time Payment ($)
+            <input type="number" id="extraOneTime1" value="0" min="0" step="100" />
+          </label>
+        </div>
+        <label>One-Time Payment Month
+          <input type="number" id="oneTimeMonth1" value="12" min="1" step="1" />
+        </label>
       </article>
 
       <article class="card" id="loan-2">
@@ -38,42 +54,49 @@
         <label>Term (Years)
           <input type="number" id="years2" value="20" min="1" step="1" />
         </label>
+
+        <h3>Prepayment for Mortgage B</h3>
+        <div class="grid three-columns">
+          <label>Extra Monthly ($)
+            <input type="number" id="extraMonthly2" value="0" min="0" step="10" />
+          </label>
+          <label>Annual Lump-Sum ($)
+            <input type="number" id="extraAnnual2" value="0" min="0" step="100" />
+          </label>
+          <label>One-Time Payment ($)
+            <input type="number" id="extraOneTime2" value="0" min="0" step="100" />
+          </label>
+        </div>
+        <label>One-Time Payment Month
+          <input type="number" id="oneTimeMonth2" value="12" min="1" step="1" />
+        </label>
       </article>
     </section>
 
-    <section class="card">
-      <h2>Prepayment Scenario (applies to both mortgages)</h2>
-      <div class="grid three-columns">
-        <label>Extra Monthly Payment ($)
-          <input type="number" id="extraMonthly" value="0" min="0" step="10" />
-        </label>
-        <label>Annual Lump-Sum ($)
-          <input type="number" id="extraAnnual" value="0" min="0" step="100" />
-        </label>
-        <label>One-Time Payment ($)
-          <input type="number" id="extraOneTime" value="0" min="0" step="100" />
-        </label>
+    <section class="card actions-card">
+      <p class="validation-help">Invalid fields are highlighted. Correct values to continue.</p>
+      <div class="actions">
+        <button id="calculateBtn">Calculate Comparison</button>
+        <button id="resetBtn" class="ghost">Reset to Defaults</button>
       </div>
-      <label>One-Time Payment Month
-        <input type="number" id="oneTimeMonth" value="12" min="1" step="1" />
-      </label>
-      <button id="calculateBtn">Calculate Comparison</button>
+      <p id="formError" class="form-error" role="alert" aria-live="polite"></p>
     </section>
 
     <section class="grid two-columns">
       <article class="card results">
         <h2>Mortgage A Results</h2>
-        <ul id="summary1"></ul>
+        <ul id="summary1" class="summary-list"></ul>
       </article>
       <article class="card results">
         <h2>Mortgage B Results</h2>
-        <ul id="summary2"></ul>
+        <ul id="summary2" class="summary-list"></ul>
       </article>
     </section>
 
     <section class="card">
       <h2>Visual Comparison: Remaining Balance Over Time</h2>
       <canvas id="balanceChart" width="1000" height="380" aria-label="Balance comparison chart"></canvas>
+      <p id="chartTooltip" class="chart-tooltip" hidden></p>
       <p class="legend"><span class="dot blue"></span> Mortgage A &nbsp; <span class="dot green"></span> Mortgage B</p>
       <p id="comparisonBlurb"></p>
     </section>
@@ -81,6 +104,7 @@
     <section class="grid two-columns">
       <article class="card">
         <h2>Amortization Schedule A</h2>
+        <button id="exportCsv1" class="ghost small">Export A to CSV</button>
         <div class="table-wrap">
           <table id="table1">
             <thead>
@@ -99,6 +123,7 @@
       </article>
       <article class="card">
         <h2>Amortization Schedule B</h2>
+        <button id="exportCsv2" class="ghost small">Export B to CSV</button>
         <div class="table-wrap">
           <table id="table2">
             <thead>
