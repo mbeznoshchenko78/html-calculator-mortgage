@@ -87,11 +87,27 @@ function buildSchedule(loanAmount, annualRatePct, years, scenario) {
 }
 
 function validateNumber(value, message) {
+  if (value === "" || value === null || value === undefined) {
+    throw new Error(message);
+  }
+
   const num = Number(value);
   if (!Number.isFinite(num) || num < 0) {
     throw new Error(message);
   }
   return num;
+}
+
+function clearOutputs() {
+  summary1.innerHTML = "";
+  summary2.innerHTML = "";
+  tableBody1.innerHTML = "";
+  tableBody2.innerHTML = "";
+
+  const ctx = chart.getContext("2d");
+  ctx.clearRect(0, 0, chart.width, chart.height);
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, chart.width, chart.height);
 }
 
 function getInputs() {
@@ -245,6 +261,7 @@ function runComparison() {
 
     comparisonBlurb.textContent = `${interestText}; ${payoffText}`;
   } catch (err) {
+    clearOutputs();
     comparisonBlurb.textContent = err.message;
   }
 }
