@@ -3,24 +3,119 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Calculator</title>
+  <title>Mortgage Comparison Calculator</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <main class="card">
-    <h1>Calculator</h1>
+  <main class="container">
+    <header>
+      <h1>Mortgage Comparison Calculator</h1>
+      <p>Compare two loan options with amortization schedules and prepayment scenarios.</p>
+    </header>
 
-    <input id="a" type="number" step="any" placeholder="A" />
-    <input id="b" type="number" step="any" placeholder="B" />
+    <section class="grid two-columns">
+      <article class="card" id="loan-1">
+        <h2>Mortgage A</h2>
+        <label>Loan Amount ($)
+          <input type="number" id="loanAmount1" value="290000" min="0" step="1000" />
+        </label>
+        <label>Interest Rate (%)
+          <input type="number" id="rate1" value="6.88" min="0" step="0.01" />
+        </label>
+        <label>Term (Years)
+          <input type="number" id="years1" value="30" min="1" step="1" />
+        </label>
+      </article>
 
-    <div class="row">
-      <button data-op="add">+</button>
-      <button data-op="sub">−</button>
-      <button data-op="mul">×</button>
-      <button data-op="div">÷</button>
-    </div>
+      <article class="card" id="loan-2">
+        <h2>Mortgage B</h2>
+        <label>Loan Amount ($)
+          <input type="number" id="loanAmount2" value="290000" min="0" step="1000" />
+        </label>
+        <label>Interest Rate (%)
+          <input type="number" id="rate2" value="5.88" min="0" step="0.01" />
+        </label>
+        <label>Term (Years)
+          <input type="number" id="years2" value="20" min="1" step="1" />
+        </label>
+      </article>
+    </section>
 
-    <p>Result: <strong id="result">—</strong></p>
+    <section class="card">
+      <h2>Prepayment Scenario (applies to both mortgages)</h2>
+      <div class="grid three-columns">
+        <label>Extra Monthly Payment ($)
+          <input type="number" id="extraMonthly" value="0" min="0" step="10" />
+        </label>
+        <label>Annual Lump-Sum ($)
+          <input type="number" id="extraAnnual" value="0" min="0" step="100" />
+        </label>
+        <label>One-Time Payment ($)
+          <input type="number" id="extraOneTime" value="0" min="0" step="100" />
+        </label>
+      </div>
+      <label>One-Time Payment Month
+        <input type="number" id="oneTimeMonth" value="12" min="1" step="1" />
+      </label>
+      <button id="calculateBtn">Calculate Comparison</button>
+    </section>
+
+    <section class="grid two-columns">
+      <article class="card results">
+        <h2>Mortgage A Results</h2>
+        <ul id="summary1"></ul>
+      </article>
+      <article class="card results">
+        <h2>Mortgage B Results</h2>
+        <ul id="summary2"></ul>
+      </article>
+    </section>
+
+    <section class="card">
+      <h2>Visual Comparison: Remaining Balance Over Time</h2>
+      <canvas id="balanceChart" width="1000" height="380" aria-label="Balance comparison chart"></canvas>
+      <p class="legend"><span class="dot blue"></span> Mortgage A &nbsp; <span class="dot green"></span> Mortgage B</p>
+      <p id="comparisonBlurb"></p>
+    </section>
+
+    <section class="grid two-columns">
+      <article class="card">
+        <h2>Amortization Schedule A</h2>
+        <div class="table-wrap">
+          <table id="table1">
+            <thead>
+              <tr>
+                <th>Month</th>
+                <th>Payment</th>
+                <th>Principal</th>
+                <th>Interest</th>
+                <th>Extra</th>
+                <th>Balance</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </article>
+      <article class="card">
+        <h2>Amortization Schedule B</h2>
+        <div class="table-wrap">
+          <table id="table2">
+            <thead>
+              <tr>
+                <th>Month</th>
+                <th>Payment</th>
+                <th>Principal</th>
+                <th>Interest</th>
+                <th>Extra</th>
+                <th>Balance</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
   </main>
 
   <script type="module" src="app.js"></script>
