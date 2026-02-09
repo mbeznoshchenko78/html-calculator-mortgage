@@ -87,6 +87,112 @@ function buildSchedule(loanAmount, annualRatePct, years, scenario) {
 }
 
 function validateNumber(value, message) {
+  if (value === "" || value === null || value === undefined) {
+    throw new Error(message);
+  }
+
+  const num = Number(value);
+  if (!Number.isFinite(num) || num < 0) {
+    throw new Error(message);
+  }
+  return num;
+}
+
+function clearOutputs() {
+  summary1.innerHTML = "";
+  summary2.innerHTML = "";
+  tableBody1.innerHTML = "";
+  tableBody2.innerHTML = "";
+
+  const ctx = chart.getContext("2d");
+  ctx.clearRect(0, 0, chart.width, chart.height);
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, chart.width, chart.height);
+}
+
+function getInputs() {
+  const oneTimeMonth = Math.max(1, Math.floor(validateNumber(inputs.oneTimeMonth.value, "Invalid one-time payment month")));
+  return {
+    loan1: {
+      loanAmount: validateNumber(inputs.loanAmount1.value, "Invalid loan amount for Mortgage A"),
+      rate: validateNumber(inputs.rate1.value, "Invalid interest rate for Mortgage A"),
+      years: Math.max(1, Math.floor(validateNumber(inputs.years1.value, "Invalid years for Mortgage A")))
+    },
+    loan2: {
+      loanAmount: validateNumber(inputs.loanAmount2.value, "Invalid loan amount for Mortgage B"),
+      rate: validateNumber(inputs.rate2.value, "Invalid interest rate for Mortgage B"),
+      years: Math.max(1, Math.floor(validateNumber(inputs.years2.value, "Invalid years for Mortgage B")))
+    },
+    scenario: {
+      extraMonthly: validateNumber(inputs.extraMonthly.value, "Invalid monthly prepayment"),
+      extraAnnual: validateNumber(inputs.extraAnnual.value, "Invalid annual prepayment"),
+      extraOneTime: validateNumber(inputs.extraOneTime.value, "Invalid one-time prepayment"),
+      oneTimeMonth
+    }
+
+document.querySelector("#calculateBtn").addEventListener("click", runComparison);
+
+function monthlyPayment(principal, annualRatePct, years) {
+  const monthlyRate = annualRatePct / 100 / 12;
+  const months = years * 12;
+
+  if (monthlyRate === 0) {
+    return principal / months;
+  }
+
+  return principal * (monthlyRate / (1 - (1 + monthlyRate) ** -months));
+}
+
+function buildSchedule(loanAmount, annualRatePct, years, scenario) {
+  const monthlyRate = annualRatePct / 100 / 12;
+  const payment = monthlyPayment(loanAmount, annualRatePct, years);
+  const maxMonths = years * 12;
+
+  let balance = loanAmount;
+  let totalInterest = 0;
+  let totalPaid = 0;
+  const rows = [];
+
+  for (let month = 1; month <= maxMonths && balance > 0; month += 1) {
+    const interest = balance * monthlyRate;
+    const scheduledPrincipal = Math.min(payment - interest, balance);
+
+    let extra = scenario.extraMonthly;
+    if (scenario.extraAnnual > 0 && month % 12 === 0) {
+      extra += scenario.extraAnnual;
+    }
+    if (scenario.extraOneTime > 0 && month === scenario.oneTimeMonth) {
+      extra += scenario.extraOneTime;
+    }
+
+    const appliedExtra = Math.min(extra, balance - scheduledPrincipal);
+    const principal = scheduledPrincipal + appliedExtra;
+    const actualPayment = principal + interest;
+
+    balance = Math.max(0, balance - principal);
+    totalInterest += interest;
+    totalPaid += actualPayment;
+
+    rows.push({
+      month,
+      payment: actualPayment,
+      principal,
+      interest,
+      extra: appliedExtra,
+      balance
+    });
+  }
+
+  return {
+    payment,
+    rows,
+    totalInterest,
+    totalPaid,
+    payoffMonths: rows.length
+  };
+}
+
+function validateNumber(value, message) {
   const num = Number(value);
   if (!Number.isFinite(num) || num < 0) {
     throw new Error(message);
@@ -122,6 +228,40 @@ function monthsToYearsMonths(months) {
   return `${years}y ${rem}m (${months} months)`;
 }
 
+function addSummaryItem(el, label, value) {
+  const li = document.createElement("li");
+  li.innerHTML = `<strong>${label}</strong><span>${value}</span>`;
+  el.append(li);
+}
+
+function renderSummary(el, schedule, title) {
+  el.innerHTML = "";
+  addSummaryItem(el, "Base Monthly Payment", fmtCurrency.format(schedule.payment));
+  addSummaryItem(el, "Total Interest", fmtCurrency.format(schedule.totalInterest));
+  addSummaryItem(el, "Total Paid", fmtCurrency.format(schedule.totalPaid));
+  addSummaryItem(el, "Time to Payoff", monthsToYearsMonths(schedule.payoffMonths));
+
+  if (!schedule.rows.length) {
+    const li = document.createElement("li");
+    li.textContent = `${title}: no amortization rows generated.`;
+    el.append(li);
+  }
+}
+
+function renderTable(body, rows) {
+  body.innerHTML = "";
+  rows.forEach((row) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${row.month}</td>
+      <td>${fmtCurrency.format(row.payment)}</td>
+      <td>${fmtCurrency.format(row.principal)}</td>
+      <td>${fmtCurrency.format(row.interest)}</td>
+      <td>${fmtCurrency.format(row.extra)}</td>
+      <td>${fmtCurrency.format(row.balance)}</td>
+    `;
+    body.append(tr);
+  });
 function renderSummary(el, schedule, title) {
   el.innerHTML = "";
   const entries = [
@@ -164,6 +304,7 @@ function drawChart(rowsA, rowsB) {
   const ctx = chart.getContext("2d");
   const width = chart.width;
   const height = chart.height;
+  const pad = { left: 64, right: 18, top: 18, bottom: 44 };
   const pad = { left: 60, right: 20, top: 20, bottom: 40 };
 
   ctx.clearRect(0, 0, width, height);
@@ -176,6 +317,7 @@ function drawChart(rowsA, rowsB) {
   const mapX = (m) => pad.left + (m / Math.max(1, maxMonths)) * (width - pad.left - pad.right);
   const mapY = (bal) => pad.top + (1 - bal / Math.max(1, maxBalance)) * (height - pad.top - pad.bottom);
 
+  ctx.strokeStyle = "#cad6e4";
   ctx.strokeStyle = "#c8d4e5";
   ctx.lineWidth = 1;
   ctx.beginPath();

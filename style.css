@@ -82,6 +82,8 @@ button {
   padding: 10px 14px;
   font-size: 15px;
   cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 6px 18px rgba(31, 101, 214, 0.3);
 }
 
 button:hover {
